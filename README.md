@@ -1,8 +1,8 @@
-# rest-apis
+# criando-rest-apis
 
 Nesse repositório estarei explicando, de uma maneira simples, o passo a passo para criar uma **REST API**, utilizando o **Django** e o **Django REST framework**. Optei por escrever esse tutorial em português, pois é um tópico bastante requisitado e que não se encontra tanto conteúdo assim no nosso idioma. 
 
-**IMPORTANTE:** Recomenda-se ter um conhecimento mínimo em **Django**, pois passarei direto pelas explicações de conceitos básicos, apenas executando comandos tendo em mente que você, leitor, sabe o que está acontecendo.
+**IMPORTANTE:** Recomenda-se ter um conhecimento mínimo em **Django**, pois passarei direto pelas explicações de conceitos básicos, tendo em mente que você, leitor, sabe o que está acontecendo.
 
 Para facilitar a sua leitura e o seu entendimento, dividi esse tutorial em vários passos.
 
@@ -11,6 +11,7 @@ Para facilitar a sua leitura e o seu entendimento, dividi esse tutorial em vári
 3. Instalando o **Django REST framework**.
 4. Criando o modelo.
 5. Migrando as aplicações.
+6. Definindo serializers.
 
 ## 1. Iniciando o projeto Django
 
@@ -41,11 +42,11 @@ Com esse arquivo, estarei criando uma aplicação chamada `myapi`.
 python manage.py startapp myapi
 ```
 
-A diferença entre projeto e aplicação nem sempre é muito bem entendida, uma ótima definição está presente na própria [documentação](https://docs.djangoproject.com/pt-br/3.2/intro/tutorial01/#write-your-first-view) do **Django**.
+A diferença entre um projeto e uma aplicação nem sempre é muito bem entendida, uma ótima definição está presente na própria [documentação](https://docs.djangoproject.com/pt-br/3.2/intro/tutorial01/#write-your-first-view) do **Django**.
 
 > Qual é a diferença entre um projeto e uma aplicação? Uma aplicação é um conjunto de elementos web que faz alguma coisa - por exemplo, um sistema de blog, um banco de dados de registros públicos, ou uma pequena aplicação de enquetes. Um projeto é uma coleção de configurações e aplicações para um website particular. Um projeto pode conter múltiplas aplicações. Uma aplicação pode estar em múltiplos projetos. Em Django, chamamos uma aplicação de “app”.
 
-Logo após a criação de sua aplicação, você deverá adicioná-la ao projeto, acessando as configurações do projeto `settings.py` e acrescentando em `INSTALLED_APPS`, assim o **Django** incluirá a sua aplicação no projeto.
+Logo após a criação da sua aplicação, você deverá adicioná-la ao projeto, acessando as configurações do projeto `settings.py` e acrescentando em `INSTALLED_APPS`, assim o **Django** saberá que deve incluir a mesma.
 
 ```python
 INSTALLED_APPS = [
@@ -55,21 +56,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'myapi.apps.MyapiConfig',  # A aplicação que você acabou de criar
+    'myapi.apps.MyapiConfig', # A aplicação que você acabou de criar
 ]
 ```
 
-As aplicações já presentes são padrões do **Django**, fique a vontade para remover as que não são úteis para você.
+As aplicações já presentes nessa lista são padrões do **Django**, fique a vontade para remover as que não são úteis para você.
 
 ## 3. Instalando o Django REST framework
 
-Agora que os o projeto e a aplicação foram criados. Vamos instalar o **Django REST framework**.
+Agora que o projeto e a aplicação foram criados. Vamos instalar o **Django REST framework**.
 
 ```sh
 pip install djangorestframework
 ```
 
-E já adicioná-lo na lista de aplicações do nosso projeto.
+E já adicioná-lo na lista das aplicações do nosso projeto.
 
 ```python
 INSTALLED_APPS = [
@@ -80,7 +81,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'myapi.apps.MyapiConfig',
-    'rest_framework',  # Django REST framework
+    'rest_framework', # Django REST framework
 ]
 ```
 
@@ -101,7 +102,7 @@ class Person(models.Model):
     weight = models.PositiveSmallIntegerField()
 ```
 
-Logo após isso, você deve registrar o seu modelo em `admin.py`, pois iremos adicionar novos registros na parte da administração do site. O prórpio **Django REST framework** ja nos disponibiliza uma interface para tal, veremos mais a frente.
+Logo após isso, você deve registrar o seu modelo em `admin.py`, pois iremos adicionar novos registros na parte da administração do site. O prórpio **Django REST framework** ja nos disponibiliza uma interface para tal, veremos tudo isso mais a frente.
 
 ```python
 from django.contrib import admin
@@ -112,7 +113,7 @@ admin.site.register(models.Person)
 
 ## 5. Migrando as aplicações
 
-Antes de migarar as aplicações, tente rodar o seu site e veja o que acontece.
+Antes de migarar as aplicações, tente rodar localmente o servidor e veja o que acontece.
 
 ```sh
 python manage.py runserver
@@ -121,17 +122,26 @@ python manage.py runserver
 Um aviso apareceu:
 
 ```text
-You have 18 unapplied migration(s). Your project may not work properly until you apply the migrations for app(s): admin, auth, contenttypes, sessions.
+You have 18 unapplied migration(s). Your project may not work properly until you apply
+the migrations for app(s): admin, auth, contenttypes, sessions.
 Run 'python manage.py migrate' to apply them.
 ```
 
-Todas essas aplicações, que ja foram vistas anteriormente como sendo as padrões do **Django**, estão prontas para serem migradas para o projeto, note que a criado por você não está aí. Usaremos o `makemigrations` para isso, nesse caso, esse comando dirá ao **Django** que temos um novo modelo e queremos que ele fique salvo como uma migração.
+Todas essas aplicações, que ja foram vistas anteriormente como sendo as padrões do **Django**, estão prontas para serem migradas para o site com um simples `migrate`, note que a criada por você não está aí. Usaremos o `makemigrations` para isso, nesse caso, esse comando dirá ao **Django** que temos um novo modelo e queremos que ele fique salvo como uma migração.
 
 ```sh
 python manage.py makemigrations
 ```
 
-Pronto, observe que uma pasta chamada `migrations` foi criada, e dentro dela existe o arquivo `0001_initial.py`.
+Agora rode o servidor novamente e veja o novo aviso que aparece.
+
+```text
+You have 19 unapplied migration(s). Your project may not work properly until you apply
+the migrations for app(s): admin, auth, contenttypes, myapi, sessions.
+Run 'python manage.py migrate' to apply them.
+```
+
+Sua aplicação agora está ali pronta para ser migrada. Observe que uma pasta chamada `migrations` foi criada, e dentro dela existe o arquivo `0001_initial.py`.
 
 ```python
 from django.db import migrations, models
@@ -156,4 +166,24 @@ class Migration(migrations.Migration):
             ],
         ),
     ]
+```
+
+Esse é o seu modelo que será migrado com o comando:
+
+```sh
+python manage.py migrate
+```
+## 6. Definindo serializers
+
+Para isso, crie um arquivo, no diretório da sua aplicação, chamado `serializers.py`, nele você importará o módulo `serializer` do **Django REST framework** e o modelo criado por você.
+
+```python
+from rest_framework import serializers
+from . import models
+
+
+class PersonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Person
+        field = '__all__'
 ```
