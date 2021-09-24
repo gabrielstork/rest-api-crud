@@ -9,7 +9,9 @@ Para facilitar a sua leitura e o seu entendimento, dividi esse tutorial em vári
 3. Instalando o **Django REST framework**.
 4. Criando o modelo.
 5. Migrando as aplicações.
-6. Definindo serializers.
+6. Definindo *serializers*.
+7. Definindo *viewsets*.
+8. Definindo rotas.
 
 **IMPORTANTE:** Para acompanhar esse passo a passo, recomenda-se ter um conhecimento mínimo em **Django**, pois passarei direto pelas explicações de conceitos básicos, tendo em mente que você, leitor, sabe o que está acontecendo.
 
@@ -64,13 +66,13 @@ As aplicações já presentes nessa lista são padrões do **Django**, fique a v
 
 ## 3. Instalando o Django REST framework
 
-Agora que o projeto e a aplicação foram criados, vamos instalar o **Django REST framework**.
+Agora que o projeto e a aplicação foram criados, vamos instalar o **Django REST framework**. Essa ferramenta é o nosso foco principal aqui, ela nos permite construir **REST APIs** no **Django**.
 
 ```sh
 pip install djangorestframework
 ```
 
-E já adicioná-lo na lista das aplicações do nosso projeto.
+E já adicioná-lo na lista das aplicações do nosso projeto, repetindo o processo final do item anterior.
 
 ```python
 INSTALLED_APPS = [
@@ -89,7 +91,7 @@ INSTALLED_APPS = [
 
 Para facilitar todo o entendimento e como a criação de modelos e a configuração de bancos de dados não é o nosso foco, usarei o banco de dados padrão do **Django** (`SQLite`) e criarei um modelo bem simples.
 
-O modelo que irei criar se chamará *Person* e contará com quatro campos (cinco, considerando o *id*): *Name*, *Age*, *Height* e *Weight*. Como sabemos, modelos são criados no arquivo `models.py` das aplicações (no meu caso `myapi/models.py`), herdando a classe `django.db.models.Model`.
+O modelo que irei criar se chamará *Person* (pessoa) e contará com quatro campos (cinco, considerando o *id*): *Name* (o nome da pessoa), *Age* (a idade da pessoa), *Country* (o país em que essa pessoa vive atualmente) e *Programmer* (se essa pessoa trabalha ou não com programação). Como sabemos, modelos são criados no arquivo `models.py` das aplicações (no meu caso `myapi/models.py`), herdando a classe `django.db.models.Model`.
 
 ```python
 from django.db import models
@@ -98,22 +100,15 @@ from django.db import models
 class Person(models.Model):
     name = models.CharField(max_length=100)
     age = models.PositiveSmallIntegerField()
-    height = models.PositiveSmallIntegerField()
-    weight = models.PositiveSmallIntegerField()
+    country = models.CharField(max_length=100)
+    programmer = models.BooleanField()
 ```
 
-Logo após isso, você deve registrar o seu modelo em `admin.py`, pois iremos adicionar novos registros na parte da administração do site. O prórpio **Django REST framework** ja nos disponibiliza uma interface para tal, veremos tudo isso mais a frente.
-
-```python
-from django.contrib import admin
-from . import models
-
-admin.site.register(models.Person)
-```
+Note que os campos que criamos são atributos da classe, cada campo é uma coluna no nosso banco de dados, mas do jeito que está agora ele não tem quase nenhuma utilidade. Precisamos migrá-lo para o nosso projeto de fato.
 
 ## 5. Migrando as aplicações
 
-Antes de migarar as aplicações, tente rodar localmente o servidor e veja o que acontece.
+Antes de migrar as aplicações, tente rodar localmente o servidor e veja o que acontece.
 
 ```sh
 python manage.py runserver
@@ -127,7 +122,7 @@ the migrations for app(s): admin, auth, contenttypes, sessions.
 Run 'python manage.py migrate' to apply them.
 ```
 
-Todas essas aplicações, que ja foram vistas anteriormente como sendo as padrões do **Django**, estão prontas para serem migradas para o site com um simples `migrate`, note que a criada por você não está aí. Usaremos o `makemigrations` para isso. Nesse caso, esse comando dirá ao **Django** que temos um novo modelo e queremos que ele fique salvo como uma migração.
+Todas essas aplicações, que ja foram vistas anteriormente como sendo as padrões do **Django**, estão prontas para serem migradas para o projeto com um simples `migrate`, note que a criada por você não está aí. Usaremos o `makemigrations` para isso. Nesse caso, esse comando dirá ao **Django** que temos um novo modelo e queremos que ele fique salvo como uma migração.
 
 ```sh
 python manage.py makemigrations
@@ -161,14 +156,14 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=100)),
                 ('age', models.PositiveSmallIntegerField()),
-                ('height', models.PositiveSmallIntegerField()),
-                ('weight', models.PositiveSmallIntegerField()),
+                ('country', models.CharField(max_length=100)),
+                ('programmer', models.BooleanField()),
             ],
         ),
     ]
 ```
 
-Esse é o modelo que criei, salvo e pronto para ser migrado. Caso você tenha alguma experiência com o **git**, o comando `makemigrations` do **Django** funciona da mesma forma que o `add` do **git**, assim como o `migrate`, que usaremos agora, e o `commit`.
+Esse é o modelo que criei, (caso você tenha copiado os passos até aqui, estará assim para você também) salvo e pronto para ser migrado. Caso você tenha alguma experiência com o **git**, o comando `makemigrations` do **Django** funciona da mesma forma que o `add` do **git**, assim como o `migrate`, que usaremos agora para migrar de fato as aplicações para o projeto, e o `commit`.
 
 ```sh
 python manage.py migrate
@@ -176,7 +171,7 @@ python manage.py migrate
 
 ## 6. Definindo serializers
 
-Para explicar a função dos *serializers* adicionarei dois registros no banco de dados criado, pelo próprio terminal.
+Para explicar a função dos *serializers* adicionarei dois registros no banco de dados criado, pelo próprio terminal. Para isso, utilizarei o comando `shell` do próprio **Django**.
 
 ```text
 python manage.py shell
@@ -191,7 +186,7 @@ python manage.py shell
 <QuerySet [<Person: Person object (1)>, <Person: Person object (2)>]>
 ```
 
-Você provalvelmente entendeu o que aconteceu, importei o nosso modelo, que é uma classe, a instanciei e utilizei o método `save()` para salvá-los como registros no nosso banco de dados, após isso, visualizei todos os objetos presentes no nosso banco de dados com `Person.objects.all()`, e foi retornada uma `QuerySet`, que é um tipo de dado não nativo do **Python**, os *serializers* nos permitem transformar esse tipo de dado, em, por exemplo, `json`.
+Você provalvelmente entendeu o que aconteceu, importei o nosso modelo, que é uma classe, criei duas instâncias (`person1` e `person2`) e utilizei o método `save()` para salvá-las como registros no nosso banco de dados, após isso, visualizei todos os objetos presentes no nosso banco de dados com `Person.objects.all()`, e foi retornada uma `QuerySet`, que é um tipo de dado não nativo do **Python**, os *serializers* nos permitem transformar esse tipo de dado em, por exemplo, `json`, e vice-versa.
 
 Para isso, crie um arquivo, no diretório da sua aplicação, chamado `serializers.py`, nele você importará o módulo `serializer` do **Django REST framework** e o modelo criado por você.
 
@@ -203,5 +198,30 @@ from . import models
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Person
-        field = '__all__'
+        fields = '__all__'
+```
+
+Note que nome da classe é a junção do nome do modelo que criei e *serializer*, e herda a classe `rest_framework.serializers.ModelSerializer`, dentro dela você deve criar uma classe `Meta` e definir dois atributos: `model` (o seu modelo) e `fields` (nesse caso eu utilizei `__all__` para pegar todos os campos do meu banco de dados, mas você pode filtrar alguns, especificando eles em uma tupla).
+
+## 7. Definindo viewsets
+
+```python
+from rest_framework import viewsets
+from . import serializers
+from . import models
+
+
+class PersonViewSets(viewsets.ModelViewSet):
+    queryset = models.Person.objects.all()
+    serializer_class = serializers.PersonSerializer
+```
+
+## 8. Definindo rotas
+
+```python
+from rest_framework import routers
+from myapi.viewsets import PersonViewSets
+
+router = routers.DefaultRouter()
+router.register('myapi', PersonViewSets)
 ```
