@@ -1,4 +1,4 @@
-# criando-rest-apis
+# rest-api-crud
 
 Nesse repositório estarei explicando, de uma maneira simples, o passo a passo para criar uma **REST API**, utilizando o **Django** e o **Django REST framework**. Optei por escrever esse tutorial em português, pois é um tópico bastante requisitado e que não se encontra tanto conteúdo assim no nosso idioma. 
 
