@@ -27,7 +27,7 @@ Para iniciar um novo projeto, primeiramente você deve ter o framework **Django*
 pip install django
 ```
 
-Depois de instalar o **Django** você deverá criar o seu projeto, no meu caso, o chamarei de `myproject`. 
+Depois de instalar o **Django**, você deverá criar o seu projeto, no meu caso, o chamarei de `myproject`. 
 
 ```sh
 django-admin startproject myproject
@@ -48,11 +48,12 @@ Com esse arquivo, estarei criando uma aplicação chamada `myapi`.
 python manage.py startapp myapi
 ```
 
-A diferença entre um projeto e uma aplicação nem sempre é muito bem entendida por quem está começando agora, uma ótima definição está presente na própria [documentação em português](https://docs.djangoproject.com/pt-br/3.2/intro/tutorial01/) do **Django**.
+A diferença entre um projeto e uma aplicação nem sempre é muito bem entendida por quem está começando, uma ótima definição está presente na própria [documentação em português](https://docs.djangoproject.com/pt-br/3.2/intro/tutorial01/) do **Django**.
 
 > Qual é a diferença entre um projeto e uma aplicação? Uma aplicação é um conjunto de elementos web que faz alguma coisa - por exemplo, um sistema de blog, um banco de dados de registros públicos, ou uma pequena aplicação de enquetes. Um projeto é uma coleção de configurações e aplicações para um website particular. Um projeto pode conter múltiplas aplicações. Uma aplicação pode estar em múltiplos projetos. Em Django, chamamos uma aplicação de “app”.
 
-Logo após a criação da sua aplicação, você deverá adicioná-la ao projeto, acessando as configurações do projeto `myproject/settings.py` e acrescentando em `INSTALLED_APPS`, assim o **Django** saberá que deve incluir a mesma.
+Logo após a criação da sua aplicação, você deverá adicioná-la ao projeto, acessando as configurações do projeto `myproject/settings.py` e a acrescentando na lista 
+`INSTALLED_APPS`, assim o **Django** saberá que essa aplicação faz parte do projeto.
 
 ```python
 INSTALLED_APPS = [
@@ -66,7 +67,7 @@ INSTALLED_APPS = [
 ]
 ```
 
-As aplicações já presentes nessa lista são padrões do **Django**, fique a vontade para remover as que não são úteis para você.
+As aplicações já presentes nessa lista são padrões do **Django**, fique a vontade para remover as que não são úteis para você. 
 
 ## 3. Instalando o Django REST framework
 
@@ -91,9 +92,11 @@ INSTALLED_APPS = [
 ]
 ```
 
+Simples assim, a ferramenta que você irá utilizar para construir suas **REST APIs** no **Django**, está pronta para uso.
+
 ## 4. Criando o modelo
 
-Para facilitar todo o entendimento e como a criação de modelos e a configuração de bancos de dados não é o nosso foco, usarei o banco de dados padrão do **Django** (`SQLite`) e criarei um modelo bem simples.
+Para facilitar todo o entendimento, e como a criação de modelos e a configuração de bancos de dados não é o nosso foco, usarei o banco de dados padrão do **Django** (`SQLite`) e criarei um modelo bem simples.
 
 O modelo que irei criar se chamará *Person* (pessoa) e contará com quatro campos (cinco, considerando o *id*): *Name* (o nome da pessoa), *Age* (a idade da pessoa), *Country* (o país em que essa pessoa vive atualmente) e *Programmer* (se essa pessoa trabalha ou não com programação). Como sabemos, modelos são criados no arquivo `models.py` das aplicações (no meu caso `myapi/models.py`), herdando a classe `django.db.models.Model`.
 
@@ -169,6 +172,8 @@ class Migration(migrations.Migration):
 
 Esse é o modelo que criei, (caso você tenha seguido os mesmos passos até aqui, estará assim para você também) salvo e pronto para ser migrado. Caso você tenha alguma experiência com o **git**, o comando `makemigrations` do **Django** funciona da mesma forma que o `add`, assim como o `migrate`, que usaremos agora para migrar de fato as aplicações para o projeto, e o `commit`.
 
+Digite então em seu terminal:
+
 ```sh
 python manage.py migrate
 ```
@@ -190,7 +195,7 @@ python manage.py shell
 <QuerySet [<Person: Person object (1)>, <Person: Person object (2)>]>
 ```
 
-Você provalvelmente entendeu o que aconteceu, importei o nosso modelo, que é uma classe, criei duas instâncias (`person1` e `person2`) e utilizei o método `save()` para salvá-las como registros no nosso banco de dados, após isso, visualizei todos os objetos presentes no nosso banco de dados com `Person.objects.all()`, e foi retornada uma `QuerySet`, que é um tipo de dado não nativo do **Python**, os *serializers* nos permitem transformar esse tipo de dado em, por exemplo, `json`, e vice-versa.
+Você provalvelmente entendeu o que aconteceu, importei o nosso modelo, que é uma classe, criei duas instâncias (`person1` e `person2`) e utilizei o método `save()` para salvá-las como registros no nosso banco de dados, após isso, visualizei todos os objetos presentes no nosso banco de dados com `Person.objects.all()`, e foi retornada uma `QuerySet`, que é um tipo de dado não nativo do **Python**, os *serializers* nos permitem transformar esse tipo de dado em, por exemplo, `json` (realizar o caminho contrário também é possível, no caso seria um *deserializers*).
 
 Para isso, crie um arquivo, no diretório da sua aplicação, chamado `serializers.py`, nele você importará o módulo `serializer` do **Django REST framework** e os seus modelos.
 
@@ -205,9 +210,18 @@ class PersonSerializer(serializers.ModelSerializer):
         fields = '__all__'
 ```
 
-Note que nome da classe é a junção do nome do modelo que criei e *serializer* (é apenas uma convenção, não necessária mas importante), e herda a classe `rest_framework.serializers.ModelSerializer`, dentro dela você deve criar uma classe `Meta` e definir dois atributos: `model` (o seu modelo) e `fields` (nesse caso eu utilizei `__all__` para pegar todos os campos do meu banco de dados, mas você pode escolher manualmente, especificando-os em uma tupla).
+Note que o nome da classe é a junção do nome do modelo que criei e *Serializer* (é apenas uma convenção, não necessária mas importante), e herda a classe `rest_framework.serializers.ModelSerializer`. Dentro dela, você deverá criar uma classe `Meta` e definir dois atributos: `model` (o seu modelo) e `fields` (nesse caso eu utilizei `__all__` para pegar todos os campos do meu banco de dados, mas você pode escolher manualmente, especificando-os em uma tupla).
 
 ## 7. Definindo viewsets
+
+Você poderia muito bem, após transformar seus dados com os *serializers*, utilizar as *views* padrões do **Django** para retornar esses mesmos dados ao usuário, mas isso não seria muito prático. A classe `rest_framework.viewsets.ModelViewSet` que herdamos para construir as *viewsets* já nos disponibiliza métodos para que não precisemos contruí-los do zero, alguns deles:
+
+* `list()` - corresponde ao método `GET`, que simplesmente lista os objetos.
+* `create()` - corresponde ao método `POST`, que te permite criar um novo objeto.
+* `update()` - corresponde ao método `PUT`, que te permite atualizar as informações de um objeto ja existente.
+* `destroy()` - corresponde ao método `DELETE`, que te permite deletar algum objeto.
+
+Para isso, crie, no mesmo diretório do `serializers.py`, um arquivo chamado `viewsets.py`. Importe o necessário (mostrado no código abaixo), e crie a sua classe, note que novameente utilizei uma convenção para nomear minha classe. Note também que o `Person.objects.all()` aparece mais uma vez, sendo atribuído a um atributo da classe, chamado `queryset` (volte e releia o início do passo 6, e tudo ficará mais claro), e em `serializer_class` você deve passar sua classe *serializer*.
 
 ```python
 from rest_framework import viewsets
@@ -222,7 +236,7 @@ class PersonViewSets(viewsets.ModelViewSet):
 
 ## 8. Definindo routers
 
-Como estamos usando *viewsets*, não é preciso definir as configurações de rotas manualmente, a classe `rest_framework.routers.DefaultRouter` fará isso para nós, basta que você a importe, a instancie, e registre suas *viewsets*.
+Como estamos usando *viewsets*, não é preciso definir as configurações de rotas manualmente, a classe `rest_framework.routers.DefaultRouter` fará isso para nós, basta que você a importe, a instancie, e registre as suas *viewsets*.
 
 Para isso, crie o arquivo `routers.py` no diretório do seu projeto (no meu caso `myproject/routers.py`).
 
@@ -234,7 +248,7 @@ router = routers.DefaultRouter()
 router.register('myapi', viewsets.PersonViewSets)
 ```
 
-Após isso, vá em `myproject/urls.py`, esse arquivo ja deve ser bem conhecido por você, a função `include` deve ser importada do módulo `django.urls`, e você deverá adicionar um item na lista `urlpatterns`. Note que o projeto agora incluirá as suas rotas registradas no arquivo anterior.
+Após isso, vá para `myproject/urls.py`, esse arquivo ja deve ser bem conhecido por você, a função `include` deve ser importada do módulo `django.urls`, e você deverá adicionar um item na lista `urlpatterns`. Note que o projeto agora incluirá as suas rotas registradas no arquivo anterior.
 
 ```python
 from django.contrib import admin
@@ -247,3 +261,4 @@ urlpatterns = [
 ]
 ```
 
+Agora é só rodar o servidor e pronto, você acabou de construir uma **REST API** com os métodos **C**reate, **R**ead, **U**pdate e **D**elete.
