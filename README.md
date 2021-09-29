@@ -6,7 +6,7 @@ https://user-images.githubusercontent.com/86558706/134972559-939fab32-1ce2-420b-
 
 Nesse repositório estarei explicando, de uma maneira simples, o passo a passo para criar uma **REST API**, utilizando o **Django** e o **Django REST framework**. Optei por escrever esse tutorial em português, pois é um tópico bastante requisitado e que não se encontra tanto conteúdo assim no nosso idioma.
 
-Para facilitar a sua leitura e o seu entendimento, dividi esse tutorial em vários passos.
+Para facilitar a sua leitura e o seu entendimento, dividi esse tutorial em alguns passos.
 
 1. Iniciando o projeto **Django**.
 2. Iniciando uma aplicação.
@@ -17,7 +17,7 @@ Para facilitar a sua leitura e o seu entendimento, dividi esse tutorial em vári
 7. Definindo *viewsets*.
 8. Definindo *routers*.
 
-**IMPORTANTE:** Para acompanhar esse passo a passo, recomenda-se ter um conhecimento mínimo em **Django**, pois passarei direto pelas explicações de conceitos básicos, tendo em mente que você, leitor, sabe o que está acontecendo.
+**IMPORTANTE:** Para acompanhar esse passo a passo, recomenda-se ter um conhecimento mínimo em **Django**, pois passarei direto por algumas explicações de conceitos básicos, tendo em mente que você, leitor, sabe o que está acontecendo.
 
 ## 1. Iniciando o projeto Django
 
@@ -221,7 +221,7 @@ Você poderia muito bem, após transformar seus dados com os *serializers*, util
 * `update()` - corresponde ao método `PUT`, que te permite atualizar as informações de um objeto ja existente.
 * `destroy()` - corresponde ao método `DELETE`, que te permite deletar algum objeto.
 
-Para isso, crie, no mesmo diretório do `serializers.py`, um arquivo chamado `viewsets.py`. Importe o necessário (mostrado no código abaixo), e crie a sua classe, note que novameente utilizei uma convenção para nomear minha classe. Note também que o `Person.objects.all()` aparece mais uma vez, sendo atribuído a um atributo da classe, chamado `queryset` (volte e releia o início do passo 6, e tudo ficará mais claro), e em `serializer_class` você deve passar sua classe *serializer*.
+Para isso, crie, no mesmo diretório do `serializers.py`, um arquivo chamado `viewsets.py`. Nele, importe o necessário e crie a sua classe, note que novamente utilizei uma convenção para nomear minha classe. Note também que o `Person.objects.all()` aparece mais uma vez, sendo atribuído a um atributo da classe, chamado `queryset` (volte e releia o início do passo 6), e em `serializer_class` você deve passar sua classe *serializer* responsável pela transformação desses dados.
 
 ```python
 from rest_framework import viewsets
@@ -248,7 +248,7 @@ router = routers.DefaultRouter()
 router.register('myapi', viewsets.PersonViewSets)
 ```
 
-Após isso, vá para `myproject/urls.py`, esse arquivo ja deve ser bem conhecido por você, a função `include` deve ser importada do módulo `django.urls`, e você deverá adicionar um item na lista `urlpatterns`. Note que o projeto agora incluirá as suas rotas registradas no arquivo anterior.
+Após isso, vá para `myproject/urls.py`, e importe a função `include` do módulo `django.urls`. Você deverá adicionar mais um item na lista `urlpatterns`. Note que o projeto agora incluirá as suas rotas registradas no passo anterior.
 
 ```python
 from django.contrib import admin
